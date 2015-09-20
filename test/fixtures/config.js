@@ -34,7 +34,7 @@ module.exports =
     {'omniture' : 'assets/vendor/s_code.js'},
 
     'app/lib/tracking/omniture.js',
-    'app/lib/tracking/pixel.js',
+    'app/lib/tracking/pixel.js'
   ],
 
   // Creates `<destination>/common.<hash>.js` file that includes all the modules specified in the bundle,

@@ -1,4 +1,5 @@
-var multibundle = require('./index.js')
+var util        = require('util')
+  , multibundle = require('./index.js')
   , options     = require('./test/fixtures/config.js')
   , config      = options['_config']
   ;
@@ -22,6 +23,7 @@ bundler.on('end', function()
 bundler.on('error', function(error)
 {
 
-  console.error('\n\n +++++++++++++++ ERROR +++++++++++++ ', '\n\n', error, '\n ++++++++++++++++++ ERROR DONE +++++++++++++++++\n\n');
+  console.error('\n\n +++++++++++++++ ERROR +++++++++++++ ', '\n\n', util.inspect(error, true, 4, true), '\n ++++++++++++++++++ ERROR DONE +++++++++++++++++\n\n');
+  console.log(error.stack);
 
 });

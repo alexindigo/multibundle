@@ -138,8 +138,6 @@ Multibundle.prototype._prepareForRjs = function(options)
   // after all (shared) bundles were processed
   this._excludeIncludes(options);
 
-  console.log('\n\n ++++++ OPTIONS ----- ', options.name, ' ---- ', options);
-
   return this._asyncOptimize.bind(this, options);
 }
 
@@ -169,22 +167,28 @@ Multibundle.prototype._asyncOptimize = function(options, callback)
     }
 
     // pass data to the component.out handler
-    if (msg.out)
-    {
-      options.out.apply(this, msg.out);
-      return;
-    }
-
-    // pass control back to upstream
     if (msg.done)
     {
-      // silent is number 4 in r.js world
-      if (this.config.logLevel < 4)
+      options.out(msg.done, function(err)
       {
-        console.log('Finished "' + options.name + '" bundle.');
-      }
+        if (err)
+        {
+          this.emit('error', err);
+          return;
+        }
 
-      callback(null, msg.done);
+        // send options to all readers
+        this.push(options);
+
+        // silent is number 4 in r.js world
+        if (this.config.logLevel < 4)
+        {
+          console.log('Finished "' + options.name + '" bundle.');
+        }
+
+        callback(null, options.name);
+      }.bind(this));
+
       return;
     }
   }.bind(this));
@@ -358,7 +362,7 @@ Multibundle.prototype._excludeIncludes = function(options)
  * @param {object} options - options object for processed component
  * @param {string} output - generated file (bundle) content
  */
-Multibundle.prototype._handleOutput = function(options, output)
+Multibundle.prototype._handleOutput = function(options, output, callback)
 {
   var hash;
 
@@ -384,15 +388,13 @@ Multibundle.prototype._handleOutput = function(options, output)
   {
     if (err)
     {
-      this.emit('error', err);
+      callback(err);
       return;
     }
 
     console.log('- Created file "' + options.outFile + '"');
 
-    // update mapping
-    // TODO: just pass componentOptions
-    this.push(options);
+    callback();
   }.bind(this));
 };
 
@@ -432,4 +434,16 @@ Multibundle.prototype._addModule = function(options, name, src)
 Multibundle.prototype._stripExtension = function(file)
 {
   return path.join(path.dirname(file), path.basename(file, path.extname(file)));
+};
+
+/**
+ * Implement _read to comply with Readable streams
+ * Doesn't really make sense for flowing object mode
+ *
+ * @private
+ * @param   {number} size - number of bytes to read asynchronously
+ */
+Multibundle.prototype._read = function(size)
+{
+
 };
