@@ -1,0 +1,30 @@
+{
+  "name": "multibundle",
+  "version": "0.0.1",
+  "description": "Runs requirejs bundling on multiple bundles in parallel",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "amd",
+    "requirejs",
+    "bundle",
+    "bundles",
+    "multiple",
+    "multi-bundle",
+    "parallel"
+  ],
+  "author": "Alex Indigo <iam@alexindigo.com>",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^1.4.2",
+    "glob": "^5.0.14",
+    "lodash": "^3.10.1",
+    "requirejs": "^2.1.20"
+  },
+  "devDependencies": {
+    "backbone": "^1.2.3",
+    "rendr": "^1.1.1"
+  }
+}
