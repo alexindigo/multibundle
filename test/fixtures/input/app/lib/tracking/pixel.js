@@ -1,9 +1,9 @@
-define(function()
+define(['underscore'], function(_)
 {
   var pixel = {
     track: function()
     {
-      return 'some pixel tracking code';
+      /* some pixel tracking code */
     }
   };
 

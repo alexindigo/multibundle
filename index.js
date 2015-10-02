@@ -1,3 +1,37 @@
+/**
+ * Runs requirejs bundling on multiple bundles in parallel.
+ *
+ * [![Build Status](https://travis-ci.org/alexindigo/multibundle.svg)](https://travis-ci.org/alexindigo/multibundle)
+ *
+ * @example
+ *
+ * var multibundle = require('multibundle')
+ *   , options     = require('./options/bundles.js')
+ *   , config      = require('./options/config.js')
+ *   ;
+ *
+ * // optimize
+ * var bundler = multibundle(config, options);
+ *
+ * bundler.on('data', function(options)
+ * {
+ *   console.log('Processed', options.name);
+ * });
+ *
+ * bundler.on('end', function()
+ * {
+ *   console.log('Processed all the bundles');
+ * });
+ *
+ * bundler.on('error', function(error)
+ * {
+ *   console.error(error);
+ * });
+ *
+ *
+ * @module Multibundle
+ */
+
 var fs          = require('fs')
   , path        = require('path')
   , util        = require('util')
@@ -22,11 +56,21 @@ Multibundle._defaults =
 {
   sharedPaths: {},
   parallelLimit: cpus.length,
+  // TRACE: 0,
+  // INFO: 1,
+  // WARN: 2,
+  // ERROR: 3,
+  // SILENT: 4
   logLevel: 1
 };
 
 /**
  * Parses multibundle config and transforms it into requirejs compatible options.
+ *
+ * @constructor
+ * @param {object} config - process configuration object
+ * @param {array} options - list of bundles to build
+ * @alias module:Multibundle
  */
 function Multibundle(config, components)
 {
@@ -62,7 +106,7 @@ function Multibundle(config, components)
     // be nice
     if (this.config.logLevel < 4)
     {
-      console.log('-- All requirejs bundles have been processed.');
+      console.log('\n-- All requirejs bundles have been processed.');
     }
 
     // singal end of the stream
@@ -73,6 +117,7 @@ function Multibundle(config, components)
 /**
  * Creates list of components to process with shared bundles being first in the list
  *
+ * @private
  * @returns {array} list of component handles
  */
 Multibundle.prototype._getComponents = function()
@@ -94,23 +139,24 @@ Multibundle.prototype._getComponents = function()
 Multibundle.prototype._processComponent = function(component)
 {
   var options =
-  {
-    cjsTranslate           : true,
-    create                 : true,
-    removeCombined         : true,
-    keepBuildDir           : false,
-    preserveLicenseComments: this.config.preserveLicenseComments || false,
-    baseUrl                : this.config.baseUrl,
-    name                   : component,
-    optimize               : this.config.optimize || 'none',
-    outFile                : path.join((this.config.destination || this.config.baseUrl), component + '.js'),
-    packages               : [],
-    paths                  : lodash.cloneDeep(this.config.sharedPaths || {}),
-    shim                   : {},
-    include                : [],
-    insertRequire          : [],
-    logLevel               : this.config.logLevel
-  };
+    {
+      cjsTranslate           : true,
+      create                 : true,
+      removeCombined         : true,
+      keepBuildDir           : false,
+      preserveLicenseComments: this.config.preserveLicenseComments || false,
+      baseUrl                : this.config.baseUrl,
+      name                   : component,
+      optimize               : this.config.optimize || 'none',
+      outFile                : path.join((this.config.destination || this.config.baseUrl), component + '.js'),
+      packages               : [],
+      paths                  : lodash.cloneDeep(this.config.sharedPaths || {}),
+      shim                   : {},
+      include                : [],
+      insertRequire          : [],
+      logLevel               : this.config.logLevel
+    }
+  ;
 
   // handle requirejs output "manually"
   options.out = this._handleOutput.bind(this, options);
@@ -139,7 +185,7 @@ Multibundle.prototype._prepareForRjs = function(options)
   this._excludeIncludes(options);
 
   return this._asyncOptimize.bind(this, options);
-}
+};
 
 /**
  * Forks child process to execute r.js with provided options
@@ -147,7 +193,6 @@ Multibundle.prototype._prepareForRjs = function(options)
  * @private
  * @param   {object} options - r.js options for the component
  * @param   {function} callback - invoked when child process finished
- * @returns {[type]} [description]
  */
 Multibundle.prototype._asyncOptimize = function(options, callback)
 {
@@ -159,10 +204,19 @@ Multibundle.prototype._asyncOptimize = function(options, callback)
   // wait for response
   bundler.on('message', function(msg)
   {
+    // Make requirejs's stdout more readable
+    if (msg.stdout)
+    {
+      console.log(msg.stdout
+        .replace('FUNCTION', '+ building "' + options.name + '" bundle')
+        .replace(/\s*$/, '\n----------------')
+      );
+    }
+
     // pass error to upstream
     if (msg.err)
     {
-      callback(err);
+      callback(msg.err);
       return;
     }
 
@@ -338,20 +392,29 @@ Multibundle.prototype._excludeIncludes = function(options)
   if (this.config.sharedBundles && this.config.sharedBundles.indexOf(options.name) > -1)
   {
     this.config.includedInShared = lodash.uniq((this.config.includedInShared || []).concat(options.include || []));
-
-    // combine modules and paths of the shared modules
-    this.config.modulesOfShared = lodash.uniq((this.config.modulesOfShared || []).concat(options.packages || []), 'name');
-    this.config.sharedPaths = lodash.merge({}, this.config.sharedPaths || {}, options.paths || {});
   }
 
-  // preserve existing packages
-  // based on `name` property of the package
-  options.packages = lodash.uniq((this.config.modulesOfShared || []).concat(options.packages || []), 'name');
   // get shared list of paths + local per component paths take precedence
-  options.paths = lodash.merge({}, this.config.sharedPaths || {}, options.paths || {});
+  options.paths = lodash.merge({}, this._modulesToEmptyPaths(lodash.difference(this.config.includedInShared || [], options.include || [])), options.paths || {});
+};
 
-  // don't exclude explicitly listed
-  options.exclude = lodash.difference(this.config.includedInShared || [], options.include || []);
+/**
+ * Converts list of modules into paths object filled with `empty:` path
+ *
+ * @private
+ * @param   {array} modules - list of modules
+ * @returns {object} paths object
+ */
+Multibundle.prototype._modulesToEmptyPaths = function(modules)
+{
+  var paths = {};
+
+  (modules || []).forEach(function(m)
+  {
+    paths[m] = 'empty:';
+  });
+
+  return paths;
 };
 
 /**
@@ -361,6 +424,7 @@ Multibundle.prototype._excludeIncludes = function(options)
  * @private
  * @param {object} options - options object for processed component
  * @param {string} output - generated file (bundle) content
+ * @param {function} callback - passes control when async operations are done
  */
 Multibundle.prototype._handleOutput = function(options, output, callback)
 {
@@ -410,8 +474,7 @@ Multibundle.prototype._addModule = function(options, name, src)
 {
   if (src.indexOf('node_modules/') > -1)
   {
-    options.packages.push(
-    {
+    options.packages.push({
       name: name,
       location: path.dirname(src),
       main: path.basename(this._stripExtension(src))
@@ -445,5 +508,4 @@ Multibundle.prototype._stripExtension = function(file)
  */
 Multibundle.prototype._read = function(size)
 {
-
 };

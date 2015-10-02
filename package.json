@@ -1,11 +1,18 @@
 {
   "name": "multibundle",
-  "version": "0.0.2",
+  "version": "1.0.1",
   "description": "Runs requirejs bundling on multiple bundles in parallel",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js"
+    "test": "node test.js",
+    "lint": "eslint -c .eslintrc {*,test/*}.js",
+    "docs": "jsdoc2md --src index.js --private --name-format code --param-list-format list --sort-by scope access category kind order --group-by scope category --separators true > README.md"
   },
+  "pre-commit": [
+    "lint",
+    "test",
+    "docs"
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:alexindigo/multibundle.git"
@@ -29,6 +36,9 @@
   },
   "devDependencies": {
     "backbone": "^1.2.3",
+    "eslint": "^1.6.0",
+    "jsdoc-to-markdown": "^1.2.0",
+    "pre-commit": "^1.1.1",
     "rendr": "^1.1.1"
   }
 }

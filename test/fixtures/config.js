@@ -16,7 +16,7 @@ module.exports =
     },
     // pass options to r.js
     baseUrl: '.',
-    optimize: 'none',
+    optimize: 'uglify',
     sharedPaths:
     {
       // test location namespacing
@@ -33,8 +33,8 @@ module.exports =
   [
     {'omniture' : 'assets/vendor/s_code.js'},
 
-    'app/lib/tracking/omniture.js',
-    'app/lib/tracking/pixel.js'
+    'app/lib/tracking/pixel.js',
+    'app/lib/tracking/omniture.js'
   ],
 
   // Creates `<destination>/common.<hash>.js` file that includes all the modules specified in the bundle,
