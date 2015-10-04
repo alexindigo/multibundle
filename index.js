@@ -394,6 +394,16 @@ Multibundle.prototype._excludeIncludes = function(options)
     this.config.includedInShared = lodash.uniq((this.config.includedInShared || []).concat(options.include || []));
   }
 
+  // add to exclude if paths is present in the component's path
+  // and it's not present in the include list
+  (this.config.includedInShared || []).forEach(function(m)
+  {
+    if (m in options.paths && options.include.indexOf(m) == -1)
+    {
+      options.exclude = (options.exclude || []).concat(m);
+    }
+  });
+
   // get shared list of paths + local per component paths take precedence
   options.paths = lodash.merge({}, this._modulesToEmptyPaths(lodash.difference(this.config.includedInShared || [], options.include || [])), options.paths || {});
 };

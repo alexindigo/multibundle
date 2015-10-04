@@ -20,7 +20,7 @@ bundler.on('data', function(options)
     , generated = fs.readFileSync(options.outFile, {encoding: 'utf8'})
     ;
 
-  assert.equal(expected, generated, 'Expected generated bundle to match fixture');
+  assert.equal(expected, generated, 'Expected generated bundle [' + options.name + '] to match fixture');
   bundlesNum--;
 
 //  console.log('\n\n ++++ PROCESSED', options, ' +++++++++++++++++++++++++++ \n\n');
