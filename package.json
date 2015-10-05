@@ -1,6 +1,6 @@
 {
   "name": "multibundle",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Runs requirejs bundling on multiple bundles in parallel",
   "main": "index.js",
   "scripts": {

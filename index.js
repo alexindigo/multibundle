@@ -271,7 +271,7 @@ Multibundle.prototype._processItem = function(options, item)
 
       // unfold path and add to include list
       options.include = options.include.concat(
-        glob.sync(item, {cwd: baseCwd, ignore: this.config.includedInShared.map(this._expandItem.bind(this, '.js'))})
+        glob.sync(item, {cwd: baseCwd, ignore: (this.config.includedInShared || []).map(this._expandItem.bind(this, '.js'))})
         .map(this._stripExtension.bind(this))
         .map(this._abridgeItem.bind(this))
         || [] // if nothing found
