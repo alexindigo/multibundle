@@ -32,9 +32,9 @@ bundler.on('error', function(error)
 
 * [Multibundle](#module_Multibundle)
   * [Multibundle](#exp_module_Multibundle--Multibundle) ⏏
-    * [`new Multibundle(config, options)`](#new_module_Multibundle--Multibundle_new)
+    * [`new Multibundle(config, components)`](#new_module_Multibundle--Multibundle_new)
     * [`._getComponents()`](#module_Multibundle--Multibundle+_getComponents) ⇒ <code>array</code> ℗
-    * [`._processComponent(component)`](#module_Multibundle--Multibundle+_processComponent) ℗
+    * [`._processComponent(component)`](#module_Multibundle--Multibundle+_processComponent) ⇒ <code>object</code> ℗
     * [`._prepareForRjs(options)`](#module_Multibundle--Multibundle+_prepareForRjs) ⇒ <code>function</code> ℗
     * [`._asyncOptimize(options, callback)`](#module_Multibundle--Multibundle+_asyncOptimize) ℗
     * [`._processItem(options, item)`](#module_Multibundle--Multibundle+_processItem) ℗
@@ -45,7 +45,7 @@ bundler.on('error', function(error)
     * [`._handleOutput(options, output, callback)`](#module_Multibundle--Multibundle+_handleOutput) ℗
     * [`._addModule(options, name, src)`](#module_Multibundle--Multibundle+_addModule) ℗
     * [`._stripExtension(file)`](#module_Multibundle--Multibundle+_stripExtension) ⇒ <code>string</code> ℗
-    * [`._read(size)`](#module_Multibundle--Multibundle+_read) ℗
+    * [`._read()`](#module_Multibundle--Multibundle+_read) ℗
 
 
 -
@@ -57,12 +57,12 @@ bundler.on('error', function(error)
 -
 
 <a name="new_module_Multibundle--Multibundle_new"></a>
-#### `new Multibundle(config, options)`
+#### `new Multibundle(config, components)`
 Parses multibundle config and transforms it into requirejs compatible options.
 
 **Params**
 - config <code>object</code> - process configuration object
-- options <code>array</code> - list of bundles to build
+- components <code>array</code> - list of bundles to build
 
 
 -
@@ -78,10 +78,11 @@ Creates list of components to process with shared bundles being first in the lis
 -
 
 <a name="module_Multibundle--Multibundle+_processComponent"></a>
-#### `multibundle._processComponent(component)` ℗
+#### `multibundle._processComponent(component)` ⇒ <code>object</code> ℗
 Assembles r.js options for the component
 
 **Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
+**Returns**: <code>object</code> - r.js ready bundling options hash  
 **Access:** private  
 **Params**
 - component <code>string</code> - component name to process
@@ -224,15 +225,12 @@ Strips any extension from a filename
 -
 
 <a name="module_Multibundle--Multibundle+_read"></a>
-#### `multibundle._read(size)` ℗
+#### `multibundle._read()` ℗
 Implement _read to comply with Readable streams
 Doesn't really make sense for flowing object mode
 
 **Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
 **Access:** private  
-**Params**
-- size <code>number</code> - number of bytes to read asynchronously
-
 
 -
 
