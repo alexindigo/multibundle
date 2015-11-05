@@ -4,7 +4,7 @@
   "description": "Runs requirejs bundling on multiple bundles in parallel",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js",
+    "test": "rm -rf ./test/tmp && mkdir test/tmp/ && node test.js",
     "lint": "eslint -c .eslintrc {*,test/*}.js",
     "docs": "jsdoc2md --src index.js --private --name-format code --param-list-format list --sort-by scope access category kind order --group-by scope category --separators true > README.md"
   },
