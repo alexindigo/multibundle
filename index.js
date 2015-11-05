@@ -69,7 +69,7 @@ Multibundle._defaults =
  *
  * @constructor
  * @param {object} config - process configuration object
- * @param {array} options - list of bundles to build
+ * @param {array} components - list of bundles to build
  * @alias module:Multibundle
  */
 function Multibundle(config, components)
@@ -135,6 +135,7 @@ Multibundle.prototype._getComponents = function()
  *
  * @private
  * @param   {string} component - component name to process
+ * @returns {object} r.js ready bundling options hash
  */
 Multibundle.prototype._processComponent = function(component)
 {
@@ -258,20 +259,28 @@ Multibundle.prototype._asyncOptimize = function(options, callback)
 Multibundle.prototype._processItem = function(options, item)
 {
   var name
+    , file
     , baseCwd = path.resolve(process.cwd(), this.config.baseUrl);
 
   // we can have either a string or an object
   if (typeof item == 'string')
   {
+    // compare notes with mapping
+    file = this._expandItem(item);
+
+    // skip if it's empty path
+    if (file == 'empty:')
+    {
+      return;
+    }
+
     // add item to the config
     // if item has glob patterns - unfold it
-    if (glob.hasMagic(item))
+    if (glob.hasMagic(file))
     {
-      item = this._expandItem(item);
-
       // unfold path and add to include list
       options.include = options.include.concat(
-        glob.sync(item, {cwd: baseCwd, ignore: (this.config.includedInShared || []).map(this._expandItem.bind(this, '.js'))})
+        glob.sync(file, {cwd: baseCwd, ignore: (this.config.includedInShared || []).map(this._expandItem.bind(this, '.js'))})
         .map(this._stripExtension.bind(this))
         .map(this._abridgeItem.bind(this))
         || [] // if nothing found
@@ -341,11 +350,18 @@ Multibundle.prototype._expandItem = function(ext, item)
   // sort prefixes long to short
   var i, prefixes = Object.keys(this.config.sharedPaths).sort(function(a, b){return b.length - a.length;});
 
-  for (i=0; i<prefixes.length; i++)
+  for (i = 0; i < prefixes.length; i++)
   {
     if (item.substr(0, prefixes[i].length) == prefixes[i])
     {
-      item = item.replace(prefixes[i], this.config.sharedPaths[prefixes[i]]);
+      if (this.config.sharedPaths[prefixes[i]] == 'empty:')
+      {
+        item = 'empty:';
+      }
+      else
+      {
+        item = item.replace(prefixes[i], this.config.sharedPaths[prefixes[i]]);
+      }
       break;
     }
   }
@@ -368,7 +384,7 @@ Multibundle.prototype._abridgeItem = function(item)
   // sort prefixes long to short
   var i, prefixes = Object.keys(this.config.sharedPaths).sort(function(a, b){return b.length - a.length;});
 
-  for (i=0; i<prefixes.length; i++)
+  for (i = 0; i < prefixes.length; i++)
   {
     if (item.substr(0, this.config.sharedPaths[prefixes[i]].length) == this.config.sharedPaths[prefixes[i]])
     {
@@ -469,7 +485,7 @@ Multibundle.prototype._handleOutput = function(options, output, callback)
     console.log('- Created file "' + options.outFile + '"');
 
     callback();
-  }.bind(this));
+  });
 };
 
 /**
@@ -482,7 +498,15 @@ Multibundle.prototype._handleOutput = function(options, output, callback)
  */
 Multibundle.prototype._addModule = function(options, name, src)
 {
-  if (src.indexOf('node_modules/') > -1)
+  // compare notes with mapping
+  src = this._expandItem(src);
+
+  // skip if it's empty path
+  if (src == 'empty:')
+  {
+    options.paths[name] = 'empty:';
+  }
+  else if (src.indexOf('node_modules/') > -1)
   {
     options.packages.push({
       name: name,
@@ -493,7 +517,7 @@ Multibundle.prototype._addModule = function(options, name, src)
   else
   {
     // paths should have resolved entries
-    options.paths[name] = this._expandItem(this._stripExtension(src));
+    options.paths[name] = this._stripExtension(src);
   }
 };
 
@@ -514,8 +538,5 @@ Multibundle.prototype._stripExtension = function(file)
  * Doesn't really make sense for flowing object mode
  *
  * @private
- * @param   {number} size - number of bytes to read asynchronously
  */
-Multibundle.prototype._read = function(size)
-{
-};
+Multibundle.prototype._read = function(){};

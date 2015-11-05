@@ -1,3 +1,6 @@
+.editorconfig
+.eslint
+.travis.yml
 node_modules/
 test/
 test.js

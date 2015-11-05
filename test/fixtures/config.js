@@ -8,12 +8,6 @@ module.exports =
     sharedBundles: ['optional', 'common'],
     // or custom function `hashFiles(output, componentOptions)`
     hashFiles: true,
-    // will be called one extra time with no arguments after all the bundles processed
-    // also accepts writable streams in object mode, (e.g. `multibundle-requirejs-mapping-write`)
-    handleMapping: function(component, filename, includedModules)
-    {
-      console.log('handleMapping', component, filename, includedModules);
-    },
     // pass options to r.js
     baseUrl: '.',
     optimize: 'uglify',
