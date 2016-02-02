@@ -1,8 +1,9 @@
-## multibundle
+# multibundle
 
 Runs requirejs bundling on multiple bundles in parallel.
 
-[![Build Status](https://travis-ci.org/alexindigo/multibundle.svg)](https://travis-ci.org/alexindigo/multibundle)
+[![Build Status](https://img.shields.io/travis/alexindigo/multibundle/master.svg)](https://travis-ci.org/alexindigo/multibundle)
+[![Coverage Status](https://img.shields.io/coveralls/alexindigo/multibundle/master.svg)](https://coveralls.io/github/alexindigo/multibundle?branch=master)
 
 ## Example
 
@@ -412,3 +413,5 @@ Executes `r.js` with following configs (in parallel).
   ]
 }
 ```
+
+For more details check out [test folder](test/fixtures).

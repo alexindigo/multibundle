@@ -1,34 +1,6 @@
 /**
  * Runs requirejs bundling on multiple bundles in parallel.
  *
- * [![Build Status](https://travis-ci.org/alexindigo/multibundle.svg)](https://travis-ci.org/alexindigo/multibundle)
- *
- * @example
- *
- * var multibundle = require('multibundle')
- *   , options     = require('./options/bundles.js')
- *   , config      = require('./options/config.js')
- *   ;
- *
- * // optimize
- * var bundler = multibundle(config, options);
- *
- * bundler.on('data', function(options)
- * {
- *   console.log('Processed', options.name);
- * });
- *
- * bundler.on('end', function()
- * {
- *   console.log('Processed all the bundles');
- * });
- *
- * bundler.on('error', function(error)
- * {
- *   console.error(error);
- * });
- *
- *
  * @module Multibundle
  */
 
