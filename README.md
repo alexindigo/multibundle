@@ -2,8 +2,9 @@
 
 Runs requirejs bundling on multiple bundles in parallel.
 
-[![Build Status](https://img.shields.io/travis/alexindigo/multibundle/master.svg)](https://travis-ci.org/alexindigo/multibundle)
-[![Coverage Status](https://img.shields.io/coveralls/alexindigo/multibundle/master.svg)](https://coveralls.io/github/alexindigo/multibundle?branch=master)
+[![Build Status](https://img.shields.io/travis/alexindigo/multibundle/v2.0.0.svg)](https://travis-ci.org/alexindigo/multibundle)
+[![Coverage Status](https://img.shields.io/coveralls/alexindigo/multibundle/v2.0.0.svg)](https://coveralls.io/github/alexindigo/multibundle?branch=v2.0.0)
+[![bitHound Overall Score](https://www.bithound.io/github/alexindigo/multibundle/badges/score.svg)](https://www.bithound.io/github/alexindigo/multibundle)
 
 ## Example
 
