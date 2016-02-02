@@ -1,17 +1,17 @@
 {
   "name": "multibundle",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Runs requirejs bundling on multiple bundles in parallel",
   "main": "index.js",
   "scripts": {
-    "test": "rm -rf ./test/tmp && mkdir test/tmp/ && node test.js",
-    "lint": "eslint -c .eslintrc {*,test/*}.js",
-    "docs": "jsdoc2md --src index.js --private --name-format code --param-list-format list --sort-by scope access category kind order --group-by scope category --separators true > README.md"
+    "pretest": "rimraf ./test/tmp .nyc_output coverage && mkdirp test/tmp",
+    "test": "nyc node test.js",
+    "posttest": "nyc report --reporter=lcov",
+    "lint": "eslint -c .eslintrc {*,test/*}.js"
   },
   "pre-commit": [
     "lint",
-    "test",
-    "docs"
+    "test"
   ],
   "repository": {
     "type": "git",
@@ -29,16 +29,20 @@
   "author": "Alex Indigo <iam@alexindigo.com>",
   "license": "MIT",
   "dependencies": {
-    "async": "^1.4.2",
-    "glob": "^5.0.14",
-    "lodash": "^3.10.1",
-    "requirejs": "^2.1.20"
+    "async": "^1.5.2",
+    "glob": "^6.0.4",
+    "lodash": "^4.1.0",
+    "requirejs": "^2.1.22"
   },
   "devDependencies": {
     "backbone": "1.2.3",
-    "eslint": "^1.6.0",
-    "jsdoc-to-markdown": "^1.2.0",
-    "pre-commit": "^1.1.1",
-    "rendr": "1.1.3"
+    "coveralls": "^2.11.6",
+    "deeply": "^1.0.0",
+    "eslint": "^1.10.3",
+    "mkdirp": "^0.5.1",
+    "nyc": "^5.5.0",
+    "pre-commit": "^1.1.2",
+    "rendr": "1.1.3",
+    "rimraf": "^2.5.1"
   }
 }

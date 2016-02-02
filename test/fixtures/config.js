@@ -17,7 +17,10 @@ module.exports =
       'app'   : 'test/fixtures/input/app',
       'assets': 'test/fixtures/input/assets',
       // needed for rendr modules
-      'rendr' : 'node_modules/rendr'
+      'rendr' : 'node_modules/rendr',
+
+      // non-existent
+      'non-existent-path' : 'empty:'
     },
     preserveLicenseComments: false
   },
@@ -42,6 +45,10 @@ module.exports =
     {'rendr/shared' : 'node_modules/rendr/shared/app.js'},
     {'rendr/client' : 'node_modules/rendr/client/router.js'},
 
+    // module that requires files directly
+    // it needs `nodeIdCompat:true`
+    {'deeply'       : 'node_modules/deeply/index.js'},
+
     // modules needed to be shimmed
     {'async'        : {src: 'node_modules/async/lib/async.js', exports: 'async'}},
     // module with implicit dependencies
@@ -49,6 +56,9 @@ module.exports =
 
     // replace underscore with lodash
     {'underscore'   : {src: 'node_modules/lodash/index.js', exports: '_'}},
+
+    // skip a module via `empty:`
+    {'not-a-module-u-r-looking-4': 'empty:'},
 
     // checked in assets
     {'hammer'       : 'assets/vendor/hammer.js'},
@@ -66,7 +76,10 @@ module.exports =
     'app/helper*.js',
 
     // lib
-    'app/lib/**/*.js'
+    'app/lib/**/*.js',
+
+    // skips "empty" module
+    'non-existent-path'
   ],
 
   // Creates separate bundle for user page components – `<destination>/user.<hash>.js`

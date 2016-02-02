@@ -144,6 +144,7 @@ Multibundle.prototype._processComponent = function(component)
       cjsTranslate           : true,
       create                 : true,
       removeCombined         : true,
+      nodeIdCompat           : true,
       keepBuildDir           : false,
       preserveLicenseComments: this.config.preserveLicenseComments || false,
       baseUrl                : this.config.baseUrl,

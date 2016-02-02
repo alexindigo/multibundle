@@ -14,16 +14,14 @@ bundlesNum = Object.keys(options).length;
 // optimize
 var bundler = multibundle(config, options);
 
-bundler.on('data', function(options)
+bundler.on('data', function(rjsOptions)
 {
-  var expected  = fs.readFileSync(expectedPath + options.name + '.js', {encoding: 'utf8'})
-    , generated = fs.readFileSync(options.outFile, {encoding: 'utf8'})
+  var expected  = fs.readFileSync(expectedPath + rjsOptions.name + '.js', {encoding: 'utf8'})
+    , generated = fs.readFileSync(rjsOptions.outFile, {encoding: 'utf8'})
     ;
 
-  assert.equal(expected, generated, 'Expected generated bundle [' + options.name + '] to match fixture');
+  assert.equal(expected, generated, 'Expected generated bundle [' + rjsOptions.name + '] to match fixture');
   bundlesNum--;
-
-//  console.log('\n\n ++++ PROCESSED', options, ' +++++++++++++++++++++++++++ \n\n');
 });
 
 bundler.on('end', function()

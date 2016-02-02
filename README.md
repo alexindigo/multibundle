@@ -1,11 +1,14 @@
-<a name="module_Multibundle"></a>
-## Multibundle
+## multibundle
+
 Runs requirejs bundling on multiple bundles in parallel.
 
 [![Build Status](https://travis-ci.org/alexindigo/multibundle.svg)](https://travis-ci.org/alexindigo/multibundle)
 
-**Example**  
-```js
+## Example
+
+### Code
+
+```javascript
 var multibundle = require('multibundle')
   , options     = require('./options/bundles.js')
   , config      = require('./options/config.js')
@@ -30,207 +33,382 @@ bundler.on('error', function(error)
 });
 ```
 
-* [Multibundle](#module_Multibundle)
-  * [Multibundle](#exp_module_Multibundle--Multibundle) ⏏
-    * [`new Multibundle(config, components)`](#new_module_Multibundle--Multibundle_new)
-    * [`._getComponents()`](#module_Multibundle--Multibundle+_getComponents) ⇒ <code>array</code> ℗
-    * [`._processComponent(component)`](#module_Multibundle--Multibundle+_processComponent) ⇒ <code>object</code> ℗
-    * [`._prepareForRjs(options)`](#module_Multibundle--Multibundle+_prepareForRjs) ⇒ <code>function</code> ℗
-    * [`._asyncOptimize(options, callback)`](#module_Multibundle--Multibundle+_asyncOptimize) ℗
-    * [`._processItem(options, item)`](#module_Multibundle--Multibundle+_processItem) ℗
-    * [`._expandItem([ext], item)`](#module_Multibundle--Multibundle+_expandItem) ⇒ <code>string</code> ℗
-    * [`._abridgeItem(item)`](#module_Multibundle--Multibundle+_abridgeItem) ⇒ <code>string</code> ℗
-    * [`._excludeIncludes(options)`](#module_Multibundle--Multibundle+_excludeIncludes) ℗
-    * [`._modulesToEmptyPaths(modules)`](#module_Multibundle--Multibundle+_modulesToEmptyPaths) ⇒ <code>object</code> ℗
-    * [`._handleOutput(options, output, callback)`](#module_Multibundle--Multibundle+_handleOutput) ℗
-    * [`._addModule(options, name, src)`](#module_Multibundle--Multibundle+_addModule) ℗
-    * [`._stripExtension(file)`](#module_Multibundle--Multibundle+_stripExtension) ⇒ <code>string</code> ℗
-    * [`._read()`](#module_Multibundle--Multibundle+_read) ℗
+### Config
 
+```javascript
+module.exports =
+{
+  '_config':
+  {
+    // 4 is silent in r.js world
+    logLevel: process.env.quiet ? 4 : 1,
+    destination: 'test/tmp',
+    sharedBundles: ['optional', 'common'],
+    // or custom function `hashFiles(output, componentOptions)`
+    hashFiles: true,
+    // pass options to r.js
+    baseUrl: '.',
+    optimize: 'uglify',
+    sharedPaths:
+    {
+      // test location namespacing
+      'app'   : 'test/fixtures/input/app',
+      'assets': 'test/fixtures/input/assets',
+      // needed for rendr modules
+      'rendr' : 'node_modules/rendr',
 
--
+      // non-existent
+      'non-existent-path' : 'empty:'
+    },
+    preserveLicenseComments: false
+  },
 
-<a name="exp_module_Multibundle--Multibundle"></a>
-### Multibundle ⏏
-**Kind**: Exported class  
+  // optional modules
+  'optional':
+  [
+    {'omniture' : 'assets/vendor/s_code.js'},
 
--
+    'app/lib/tracking/pixel.js',
+    'app/lib/tracking/omniture.js'
+  ],
 
-<a name="new_module_Multibundle--Multibundle_new"></a>
-#### `new Multibundle(config, components)`
-Parses multibundle config and transforms it into requirejs compatible options.
+  // Creates `<destination>/common.<hash>.js` file that includes all the modules specified in the bundle,
+  // shared modules between all the pages.
+  'common':
+  [
+    // node modules
+    {'requirejs'    : 'node_modules/requirejs/require.js'},
 
-**Params**
-- config <code>object</code> - process configuration object
-- components <code>array</code> - list of bundles to build
+    // multiple entry points module
+    {'rendr/shared' : 'node_modules/rendr/shared/app.js'},
+    {'rendr/client' : 'node_modules/rendr/client/router.js'},
 
+    // module that requires files directly
+    // it needs `nodeIdCompat:true`
+    {'deeply'       : 'node_modules/deeply/index.js'},
 
--
+    // modules needed to be shimmed
+    {'async'        : {src: 'node_modules/async/lib/async.js', exports: 'async'}},
+    // module with implicit dependencies
+    {'backbone'     : {src: 'node_modules/backbone/backbone.js', deps: ['jquery', 'underscore', 'jqueryHammer'], exports: 'Backbone'}},
 
-<a name="module_Multibundle--Multibundle+_getComponents"></a>
-#### `multibundle._getComponents()` ⇒ <code>array</code> ℗
-Creates list of components to process with shared bundles being first in the list
+    // replace underscore with lodash
+    {'underscore'   : {src: 'node_modules/lodash/index.js', exports: '_'}},
 
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Returns**: <code>array</code> - list of component handles  
-**Access:** private  
+    // skip a module via `empty:`
+    {'not-a-module-u-r-looking-4': 'empty:'},
 
--
+    // checked in assets
+    {'hammer'       : 'assets/vendor/hammer.js'},
 
-<a name="module_Multibundle--Multibundle+_processComponent"></a>
-#### `multibundle._processComponent(component)` ⇒ <code>object</code> ℗
-Assembles r.js options for the component
+    // assets needed to be shimmed
+    {'jquery'       : {src: 'assets/vendor/jquery.js', exports: 'jQuery'}},
 
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Returns**: <code>object</code> - r.js ready bundling options hash  
-**Access:** private  
-**Params**
-- component <code>string</code> - component name to process
+    // execute plugin to add methods to jQuery
+    {'jqueryHammer' : {src: 'assets/vendor/jquery.hammer.js', deps: ['jquery', 'hammer'] , insertRequire: true}},
 
+    // main script
+    {'main'         : 'app/main.js'},
 
--
+    // app helper files
+    'app/helper*.js',
 
-<a name="module_Multibundle--Multibundle+_prepareForRjs"></a>
-#### `multibundle._prepareForRjs(options)` ⇒ <code>function</code> ℗
-Converts options object into async.parallel ready function
-to process component with r.js
+    // lib
+    'app/lib/**/*.js',
 
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Returns**: <code>function</code> - async.parallel ready function  
-**Access:** private  
-**Params**
-- options <code>object</code> - r.js options for the component
+    // skips "empty" module
+    'non-existent-path'
+  ],
 
+  // Creates separate bundle for user page components – `<destination>/user.<hash>.js`
+  'user':
+  [
+    'app/models/user/**/*.js',
+    'app/views/user/**/*.js'
+  ],
 
--
+  // Creates separate bundle for map page components – `<destination>/maps.<hash>.js`
+  'maps':
+  [
+    'app/models/maps/**/*.js',
+    'app/views/maps/**/*.js'
+  ]
+};
+```
 
-<a name="module_Multibundle--Multibundle+_asyncOptimize"></a>
-#### `multibundle._asyncOptimize(options, callback)` ℗
-Forks child process to execute r.js with provided options
+### Output
 
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Access:** private  
-**Params**
-- options <code>object</code> - r.js options for the component
-- callback <code>function</code> - invoked when child process finished
+Executes `r.js` with following configs (in parallel).
 
+#### optional
 
--
+```javascript
+{
+  cjsTranslate: true,
+  create: true,
+  removeCombined: true,
+  nodeIdCompat: true,
+  keepBuildDir: false,
+  preserveLicenseComments: false,
+  baseUrl: '.',
+  name: 'optional',
+  optimize: 'uglify',
+  outFile: 'test/tmp/optional.js',
+  packages: [],
+  paths:
+  {
+    requirejs: 'empty:',
+    'rendr/shared': 'empty:',
+    'rendr/client': 'empty:',
+    deeply: 'empty:',
+    async: 'empty:',
+    backbone: 'empty:',
+    underscore: 'empty:',
+    'not-a-module-u-r-looking-4': 'empty:',
+    hammer: 'empty:',
+    jquery: 'empty:',
+    jqueryHammer: 'empty:',
+    main: 'empty:',
+    'app/helper': 'empty:',
+    'app/lib/tracking/custom': 'empty:',
+    app: 'test/fixtures/input/app',
+    assets: 'test/fixtures/input/assets',
+    rendr: 'node_modules/rendr',
+    'non-existent-path': 'empty:',
+    omniture: 'test/fixtures/input/assets/vendor/s_code'
+  },
+  shim: {},
+  include:
+  [
+    'omniture',
+    'app/lib/tracking/pixel',
+    'app/lib/tracking/omniture'
+  ],
+  insertRequire: [],
+  logLevel: 1,
+  out: [Function]
+}
+```
 
-<a name="module_Multibundle--Multibundle+_processItem"></a>
-#### `multibundle._processItem(options, item)` ℗
-Converts component item into proper r.js component options
+#### common
 
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Access:** private  
-**Params**
-- options <code>object</code> - r.js options for the component
-- item <code>object</code> | <code>string</code> - item to bundle with the component
+```javascript
+{ cjsTranslate: true,
+  create: true,
+  removeCombined: true,
+  nodeIdCompat: true,
+  keepBuildDir: false,
+  preserveLicenseComments: false,
+  baseUrl: '.',
+  name: 'common',
+  optimize: 'uglify',
+  outFile: 'test/tmp/common.js',
+  packages:
+  [
+    { name: 'requirejs',
+      location: 'node_modules/requirejs',
+      main: 'require' },
+    { name: 'rendr/shared',
+      location: 'node_modules/rendr/shared',
+      main: 'app' },
+    { name: 'rendr/client',
+      location: 'node_modules/rendr/client',
+      main: 'router' },
+    { name: 'deeply',
+      location: 'node_modules/deeply',
+      main: 'index' },
+    { name: 'async',
+      location: 'node_modules/async/lib',
+      main: 'async' },
+    { name: 'backbone',
+      location: 'node_modules/backbone',
+      main: 'backbone' },
+    { name: 'underscore',
+      location: 'node_modules/lodash',
+      main: 'index' } ],
+  paths:
+  {
+    omniture: 'empty:',
+    'app/lib/tracking/pixel': 'empty:',
+    'app/lib/tracking/omniture': 'empty:',
+    app: 'test/fixtures/input/app',
+    assets: 'test/fixtures/input/assets',
+    rendr: 'node_modules/rendr',
+    'non-existent-path': 'empty:',
+    'not-a-module-u-r-looking-4': 'empty:',
+    hammer: 'test/fixtures/input/assets/vendor/hammer',
+    jquery: 'test/fixtures/input/assets/vendor/jquery',
+    jqueryHammer: 'test/fixtures/input/assets/vendor/jquery.hammer',
+    main: 'test/fixtures/input/app/main'
+  },
+  shim:
+  {
+    async: { exports: 'async' },
+    backbone: { exports: 'Backbone', deps: [Object] },
+    underscore: { exports: '_' },
+    jquery: { exports: 'jQuery' }
+  },
+  include:
+  [
+    'requirejs',
+    'rendr/shared',
+    'rendr/client',
+    'deeply',
+    'async',
+    'backbone',
+    'underscore',
+    'not-a-module-u-r-looking-4',
+    'hammer',
+    'jquery',
+    'jqueryHammer',
+    'main',
+    'app/helper',
+    'app/lib/tracking/custom'
+  ],
+  insertRequire: [ 'jqueryHammer' ],
+  logLevel: 1,
+  out: [Function],
+  exclude:
+  [
+    'omniture',
+    'app/lib/tracking/pixel',
+    'app/lib/tracking/omniture'
+  ]
+}
+```
 
+#### user
 
--
+```javascript
 
-<a name="module_Multibundle--Multibundle+_expandItem"></a>
-#### `multibundle._expandItem([ext], item)` ⇒ <code>string</code> ℗
-Expands provided glob pattern with path from mapping hash
+{
+  cjsTranslate: true,
+  create: true,
+  removeCombined: true,
+  nodeIdCompat: true,
+  keepBuildDir: false,
+  preserveLicenseComments: false,
+  baseUrl: '.',
+  name: 'user',
+  optimize: 'uglify',
+  outFile: 'test/tmp/user.js',
+  packages: [],
+  paths:
+  {
+    omniture: 'empty:',
+    'app/lib/tracking/pixel': 'empty:',
+    'app/lib/tracking/omniture': 'empty:',
+    requirejs: 'empty:',
+    'rendr/shared': 'empty:',
+    'rendr/client': 'empty:',
+    deeply: 'empty:',
+    async: 'empty:',
+    backbone: 'empty:',
+    underscore: 'empty:',
+    'not-a-module-u-r-looking-4': 'empty:',
+    hammer: 'empty:',
+    jquery: 'empty:',
+    jqueryHammer: 'empty:',
+    main: 'empty:',
+    'app/helper': 'empty:',
+    'app/lib/tracking/custom': 'empty:',
+    app: 'test/fixtures/input/app',
+    assets: 'test/fixtures/input/assets',
+    rendr: 'node_modules/rendr',
+    'non-existent-path': 'empty:'
+  },
+  shim: {},
+  include: [ 'app/models/user/user', 'app/views/user/user' ],
+  insertRequire: [],
+  logLevel: 1,
+  out: [Function],
+  exclude:
+  [
+    'omniture',
+    'app/lib/tracking/pixel',
+    'app/lib/tracking/omniture',
+    'requirejs',
+    'rendr/shared',
+    'rendr/client',
+    'deeply',
+    'async',
+    'backbone',
+    'underscore',
+    'not-a-module-u-r-looking-4',
+    'hammer',
+    'jquery',
+    'jqueryHammer',
+    'main',
+    'app/helper',
+    'app/lib/tracking/custom'
+  ]
+}
+```
 
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Returns**: <code>string</code> - resulted path  
-**Access:** private  
-**Params**
-- [ext] <code>string</code> - extension to add to the item
-- item <code>string</code> - item to bundle with the component
+### maps
 
+```javascript
 
--
-
-<a name="module_Multibundle--Multibundle+_abridgeItem"></a>
-#### `multibundle._abridgeItem(item)` ⇒ <code>string</code> ℗
-Undoes expansion of provided item with path from mapping hash
-
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Returns**: <code>string</code> - resulted path  
-**Access:** private  
-**Params**
-- item <code>string</code> - item to bundle with the component
-
-
--
-
-<a name="module_Multibundle--Multibundle+_excludeIncludes"></a>
-#### `multibundle._excludeIncludes(options)` ℗
-Excludes includes of shared bundles from provided bundle
-
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Access:** private  
-**Params**
-- options <code>object</code> - options object for processed component
-
-
--
-
-<a name="module_Multibundle--Multibundle+_modulesToEmptyPaths"></a>
-#### `multibundle._modulesToEmptyPaths(modules)` ⇒ <code>object</code> ℗
-Converts list of modules into paths object filled with `empty:` path
-
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Returns**: <code>object</code> - paths object  
-**Access:** private  
-**Params**
-- modules <code>array</code> - list of modules
-
-
--
-
-<a name="module_Multibundle--Multibundle+_handleOutput"></a>
-#### `multibundle._handleOutput(options, output, callback)` ℗
-Adds content based hash to the bundle files if needed,
-and stores them on disk
-
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Access:** private  
-**Params**
-- options <code>object</code> - options object for processed component
-- output <code>string</code> - generated file (bundle) content
-- callback <code>function</code> - passes control when async operations are done
-
-
--
-
-<a name="module_Multibundle--Multibundle+_addModule"></a>
-#### `multibundle._addModule(options, name, src)` ℗
-Adds module with proper path to the component options.
-
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Access:** private  
-**Params**
-- options <code>object</code> - options object for processed component
-- name <code>string</code> - name of the module
-- src <code>string</code> - source property of the module config
-
-
--
-
-<a name="module_Multibundle--Multibundle+_stripExtension"></a>
-#### `multibundle._stripExtension(file)` ⇒ <code>string</code> ℗
-Strips any extension from a filename
-
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Returns**: <code>string</code> - - same but with stripped out extensions  
-**Access:** private  
-**Params**
-- file <code>string</code> - file path
-
-
--
-
-<a name="module_Multibundle--Multibundle+_read"></a>
-#### `multibundle._read()` ℗
-Implement _read to comply with Readable streams
-Doesn't really make sense for flowing object mode
-
-**Kind**: instance method of <code>[Multibundle](#exp_module_Multibundle--Multibundle)</code>  
-**Access:** private  
-
--
-
+{
+  cjsTranslate: true,
+  create: true,
+  removeCombined: true,
+  nodeIdCompat: true,
+  keepBuildDir: false,
+  preserveLicenseComments: false,
+  baseUrl: '.',
+  name: 'maps',
+  optimize: 'uglify',
+  outFile: 'test/tmp/maps.js',
+  packages: [],
+  paths:
+  {
+    omniture: 'empty:',
+    'app/lib/tracking/pixel': 'empty:',
+    'app/lib/tracking/omniture': 'empty:',
+    requirejs: 'empty:',
+    'rendr/shared': 'empty:',
+    'rendr/client': 'empty:',
+    deeply: 'empty:',
+    async: 'empty:',
+    backbone: 'empty:',
+    underscore: 'empty:',
+    'not-a-module-u-r-looking-4': 'empty:',
+    hammer: 'empty:',
+    jquery: 'empty:',
+    jqueryHammer: 'empty:',
+    main: 'empty:',
+    'app/helper': 'empty:',
+    'app/lib/tracking/custom': 'empty:',
+    app: 'test/fixtures/input/app',
+    assets: 'test/fixtures/input/assets',
+    rendr: 'node_modules/rendr',
+    'non-existent-path': 'empty:'
+  },
+  shim: {},
+  include: [ 'app/models/maps/maps', 'app/views/maps/maps' ],
+  insertRequire: [],
+  logLevel: 1,
+  out: [Function],
+  exclude:
+  [
+    'omniture',
+    'app/lib/tracking/pixel',
+    'app/lib/tracking/omniture',
+    'requirejs',
+    'rendr/shared',
+    'rendr/client',
+    'deeply',
+    'async',
+    'backbone',
+    'underscore',
+    'not-a-module-u-r-looking-4',
+    'hammer',
+    'jquery',
+    'jqueryHammer',
+    'main',
+    'app/helper',
+    'app/lib/tracking/custom'
+  ]
+}
+```

@@ -5,9 +5,9 @@ process.on('message', function(data)
   var output;
   var stdout = '';
 
-  hookStdout(function(data)
+  var unhook = hookStdout(function(chunk)
   {
-    stdout += data.toString();
+    stdout += chunk.toString();
   });
 
   // pass "out" function call
@@ -20,6 +20,7 @@ process.on('message', function(data)
   requirejs.optimize(data.component, function()
   {
     // it's done
+    unhook();
     process.send({done: output, stdout: stdout});
     process.exit();
   },
@@ -27,6 +28,7 @@ process.on('message', function(data)
   function(err)
   {
     // report upstream
+    unhook();
     process.send({err: err, stdout: stdout});
     process.exit(1);
   });
@@ -34,6 +36,13 @@ process.on('message', function(data)
   process.send({started: data.component.name});
 });
 
+/**
+ * Hooks into stdout stream
+ * to snitch on passed data
+ *
+ * @param   {function} callback - invoked on each passing chunk
+ * @returns {function} - snitching-cancel function
+ */
 function hookStdout(callback)
 {
   process.stdout._oWrite = process.stdout.write;
