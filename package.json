@@ -37,7 +37,7 @@
   "devDependencies": {
     "backbone": "1.2.3",
     "coveralls": "^2.11.6",
-    "deeply": "^1.0.0",
+    "deeply": "^2.0.1",
     "eslint": "^1.10.3",
     "mkdirp": "^0.5.1",
     "nyc": "^5.5.0",
